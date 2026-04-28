@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄影作品集</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- AOS Animation Library -->
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    transitionProperty: {
+                        'height': 'height',
+                        'spacing': 'margin, padding',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .transition-transform-opacity {
+                transition-property: transform, opacity;
+            }
+            .backdrop-blur-sm {
+                backdrop-filter: blur(4px);
+            }
+        }
+        
+        /* Redirect check - if user directly accesses gallery.html without going through welcome.html, redirect them */
+        window.addEventListener('DOMContentLoaded', function() {
+            // Check if the user came from welcome.html
+            const referrer = document.referrer;
+            const currentPath = window.location.pathname;
+            
+            // If the user didn't come from welcome.html and is directly accessing gallery.html
+            if (!referrer.includes('welcome.html') && currentPath.includes('gallery.html')) {
+                // Redirect to welcome.html
+                window.location.href = 'welcome.html';
+            }
+        });
+        
+        /* Custom styles */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .gallery-item {
+            @apply relative overflow-hidden rounded-lg cursor-pointer;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        
+        .gallery-item:hover {
+            @apply transform scale-[1.02] shadow-xl;
+        }
+        
+        .gallery-item img {
+            @apply w-full h-full object-cover transition-transform duration-700 ease-in-out;
+        }
+        
+        .gallery-item:hover img {
+            @apply transform scale-110;
+        }
+        
+        .modal {
+            @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 opacity-0 pointer-events-none transition-opacity duration-300;
+        }
+        
+        .modal.active {
+            @apply opacity-100 pointer-events-auto;
+        }
+        
+        .modal-content {
+            @apply max-w-6xl w-full max-h-[90vh] overflow-hidden relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .welcome-screen {
+            @apply fixed inset-0 z-[100] flex flex-col items-center justify-center bg-dark text-light transition-opacity duration-1000;
+        }
+        
+        .welcome-screen.hidden {
+            @apply opacity-0 pointer-events-none;
+        }
+        
+        .nav-link {
+            @apply relative px-3 py-2 text-light hover:text-primary transition-colors duration-300;
+        }
+        
+        .nav-link::after {
+            content: '';
+            @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300;
+        }
+        
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            @apply w-full;
+        }
+        
+        .mobile-menu {
+            @apply fixed inset-0 z-40 bg-dark bg-opacity-95 transform translate-x-full transition-transform duration-300 ease-in-out;
+        }
+        
+        .mobile-menu.active {
+            @apply transform translate-x-0;
+        }
+    </style>
+</head>
+<body class="bg-dark text-light min-h-screen">
+
+
+    <!-- Header/Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-30 bg-dark bg-opacity-80 backdrop-blur-sm transition-all duration-300">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-light">摄影艺术</a>
+            
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="#home" class="nav-link active">首页</a>
+                <a href="#gallery" class="nav-link">画廊</a>
+            </nav>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden text-light focus:outline-none">
+                <i class="fa fa-bars text-2xl"></i>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Mobile Navigation Menu -->
+    <div id="mobile-menu" class="mobile-menu md:hidden">
+        <div class="flex justify-end p-4">
+            <button id="close-menu-button" class="text-light focus:outline-none">
+                <i class="fa fa-times text-2xl"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col items-center space-y-6 mt-16">
+            <a href="#home" class="text-xl text-light hover:text-primary transition-colors duration-300 mobile-nav-link">首页</a>
+
+            <a href="#gallery" class="text-xl text-light hover:text-primary transition-colors duration-300 mobile-nav-link">画廊</a>
+
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('https://p3-doubao-search-sign.byteimg.com/labis/9c1e919a67e24c3b33574db82feb0136~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=jSyUh1NDd%2BGEqA6vYSSWH1%2BaODg%3D');">
+            <div class="text-center bg-black bg-opacity-50 p-8 rounded-lg">
+                <h2 class="text-4xl md:text-6xl font-bold mb-4" data-aos="fade-up">捕捉瞬间</h2>
+                <p class="text-xl md:text-2xl mb-8" data-aos="fade-up" data-aos-delay="200">通过摄影镜头</p>
+                <a href="#gallery" class="inline-block bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition-colors duration-300" data-aos="fade-up" data-aos-delay="400">
+                    探索画廊
+                </a>
+            </div>
+        </section>
+
+
+
+        <!-- Gallery Section -->
+        <section id="gallery" class="py-20 bg-dark">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2 text-center" data-aos="fade-up">摄影画廊</h2>
+                <p class="text-center text-gray-400 mb-12" data-aos="fade-up" data-aos-delay="200">精选作品集</p>
+                
+                <!-- Gallery Filter -->
+                <div class="flex flex-wrap justify-center mb-8" data-aos="fade-up" data-aos-delay="300">
+                    <button class="filter-btn active m-2 px-4 py-2 bg-secondary hover:bg-primary text-light rounded-full transition-colors duration-300" data-filter="all">全部</button>
+                    <button class="filter-btn m-2 px-4 py-2 bg-secondary hover:bg-primary text-light rounded-full transition-colors duration-300" data-filter="landscape">风景</button>
+                    <button class="filter-btn m-2 px-4 py-2 bg-secondary hover:bg-primary text-light rounded-full transition-colors duration-300" data-filter="cityscape">城市</button>
+                    <button class="filter-btn m-2 px-4 py-2 bg-secondary hover:bg-primary text-light rounded-full transition-colors duration-300" data-filter="nature">自然</button>
+                </div>
+                
+                <!-- Gallery Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Landscape Images -->
+                    <div class="gallery-item landscape" data-aos="fade-up" data-aos-delay="100">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/50d511aa279689c3028358848162cba9~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=WCWWf%2B8qbRKro%2FyoC8frT7emy7o%3D" alt="Mountain Landscape" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">山间日出</h3>
+                                <p class="text-sm text-gray-300">挪威峡湾</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item landscape" data-aos="fade-up" data-aos-delay="200">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/9c1e919a67e24c3b33574db82feb0136~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=jSyUh1NDd%2BGEqA6vYSSWH1%2BaODg%3D" alt="Mountain Church" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">阿尔卑斯小教堂</h3>
+                                <p class="text-sm text-gray-300">多洛米蒂山，意大利</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item landscape" data-aos="fade-up" data-aos-delay="300">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/16545438a269435f918fae12449adbfa~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=LENGZ33KWjjhKzdafWf5jDG8g00%3D" alt="Mountain Lake" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">喜马拉雅倒影</h3>
+                                <p class="text-sm text-gray-300">博卡拉，尼泊尔</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cityscape Images -->
+                    <div class="gallery-item cityscape" data-aos="fade-up" data-aos-delay="100">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/3b6a453da6a36a72cc4b34f4657c4901~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=tFmFJtmiTWRwY%2FwV%2FzGfaNtEP8U%3D" alt="Modern City" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">城市倒影</h3>
+                                <p class="text-sm text-gray-300">上海，中国</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item cityscape" data-aos="fade-up" data-aos-delay="200">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/e8936b2e244e4f93a214de951e51e7f2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=dqX5JA8OVccG1zqK6Jem3L7k2Sc%3D" alt="London Skyline" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">黄昏伦敦</h3>
+                                <p class="text-sm text-gray-300">金融区</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item cityscape" data-aos="fade-up" data-aos-delay="300">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/d7401c0f7ce6423cba0b1747045f7edf~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=fxCTufFLSQUzDQmG8p5GuWmXRz0%3D" alt="Toronto Skyline" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">多伦多天际线</h3>
+                                <p class="text-sm text-gray-300">夜晚的CN塔</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nature Images -->
+                    <div class="gallery-item nature" data-aos="fade-up" data-aos-delay="100">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/1e277dd5db9ebb9ec04f29564897f4f9~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=M3HvcLuRRY3G%2BxyY1wuYMlar%2BAg%3D" alt="Mountain Reflection" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">山间明镜</h3>
+                                <p class="text-sm text-gray-300">高山湖泊</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item nature" data-aos="fade-up" data-aos-delay="200">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/edf51a166f869d26fef0e2267eea9c8a~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=myylgK%2FiHLDPbYmW6BApeniHL1Y%3D" alt="River Valley" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">河谷</h3>
+                                <p class="text-sm text-gray-300">加拿大落基山脉</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item nature" data-aos="fade-up" data-aos-delay="300">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/6b3e0420cf9caf29023f39cbafc4a4e3~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=5%2F5WChHq3Louk3HvNyhbjJVHpkk%3D" alt="Mandarin Duck" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-70 transition-opacity duration-300 flex items-end">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold">鸳鸯</h3>
+                                <p class="text-sm text-gray-300">色彩斑斓的水禽</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="text-center mt-12">
+                    <button id="load-more" class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition-colors duration-300">
+                        加载更多
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-400">&copy; 2026 摄影作品集. 保留所有权利.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+                        <i class="fa fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+                        <i class="fa fa-facebook"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+                        <i class="fa fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+                        <i class="fa fa-flickr"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="absolute top-4 right-4 text-white text-3xl cursor-pointer hover:text-gray-300 transition-colors duration-300" id="close-modal">
+                <i class="fa fa-times"></i>
+            </span>
+            <img id="modal-image" src="" alt="Modal Image" class="w-full h-auto">
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                <h3 id="modal-title" class="text-xl font-bold text-white"></h3>
+                <p id="modal-description" class="text-sm text-gray-300"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize AOS Animation Library
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true
+            });
+            
+
+            
+            // Header scroll effect
+            const header = document.querySelector('header');
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('py-2');
+                    header.classList.remove('py-4');
+                } else {
+                    header.classList.add('py-4');
+                    header.classList.remove('py-2');
+                }
+            });
+            
+            // Mobile Menu Toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const closeMenuButton = document.getElementById('close-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                });
+            });
+            
+            // Gallery Filter
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active', 'bg-primary'));
+                    filterButtons.forEach(btn => btn.classList.add('bg-secondary'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active', 'bg-primary');
+                    button.classList.remove('bg-secondary');
+                    
+                    const filter = button.getAttribute('data-filter');
+                    
+                    galleryItems.forEach(item => {
+                        if (filter === 'all' || item.classList.contains(filter)) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Image Modal
+            const modal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const closeModal = document.getElementById('close-modal');
+            
+            galleryItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const img = item.querySelector('img');
+                    const title = item.querySelector('h3').textContent;
+                    const description = item.querySelector('p').textContent;
+                    
+                    modalImage.src = img.src;
+                    modalTitle.textContent = title;
+                    modalDescription.textContent = description;
+                    
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+            
+            closeModal.addEventListener('click', () => {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+
+            
+            // Load More Button (Simulated)
+            const loadMoreButton = document.getElementById('load-more');
+            
+            loadMoreButton.addEventListener('click', () => {
+                // Simulate loading state
+                loadMoreButton.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 加载中...';
+                
+                // Simulate network delay
+                setTimeout(() => {
+                    alert('所有图片已加载完成！');
+                    loadMoreButton.innerHTML = 'Load More';
+                }, 1500);
+            });
+            
+            // Navigation Active State
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    
+                    if (window.scrollY >= (sectionTop - sectionHeight / 3)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

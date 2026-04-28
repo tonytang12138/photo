@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 摄影作品集</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .bg-gradient-radial {
+                background-image: radial-gradient(circle, var(--tw-gradient-stops));
+            }
+        }
+        
+        /* Custom styles */
+        html, body {
+            height: 100%;
+        }
+        
+        .login-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .login-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.4);
+            z-index: -1;
+        }
+        
+        .login-form-container {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .login-form-container:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .login-button {
+            transition: all 0.3s ease;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <!-- Login Container -->
+    <div class="login-container flex items-center justify-center relative">
+        <!-- Background Image -->
+        <img src="https://p3-doubao-search-sign.byteimg.com/labis/9c1e919a67e24c3b33574db82feb0136~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=jSyUh1NDd%2BGEqA6vYSSWH1%2BaODg%3D" alt="Mountain Landscape" class="login-bg">
+        
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gradient-radial from-dark/80 via-dark/60 to-dark/90 z-0"></div>
+        
+        <!-- Login Form -->
+        <div class="login-form-container bg-dark/40 border border-gray-700 rounded-xl p-8 w-full max-w-md z-10">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2">管理员登录</h1>
+                <p class="text-gray-400">摄影作品集</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block mb-2 text-sm font-medium text-gray-300">用户名</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa fa-user"></i>
+                        </span>
+                        <input type="text" id="username" class="input-field w-full pl-10 pr-4 py-3 bg-dark/60 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" placeholder="请输入用户名" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block mb-2 text-sm font-medium text-gray-300">密码</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                        <input type="password" id="password" class="input-field w-full pl-10 pr-4 py-3 bg-dark/60 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" placeholder="请输入密码" required>
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-primary transition-colors duration-300">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" type="checkbox" class="w-4 h-4 bg-dark/60 border border-gray-600 rounded focus:ring-2 focus:ring-primary">
+                        <label for="remember-me" class="ml-2 text-sm text-gray-300">记住我</label>
+                    </div>
+                    <a href="#" class="text-sm text-primary hover:text-blue-400 transition-colors duration-300">忘记密码？</a>
+                </div>
+                
+                <div>
+                    <button type="submit" id="login-button" class="login-button w-full bg-primary hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <span class="mr-2">登录</span>
+                        <i class="fa fa-sign-in"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-400">
+                    <a href="welcome.html" class="text-primary hover:text-blue-400 transition-colors duration-300">返回画廊</a>
+                </p>
+            </div>
+            
+            <div id="error-message" class="mt-4 hidden">
+                <div class="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline" id="error-text"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if admin is already logged in
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                // Verify token with server
+                fetch('http://localhost:3000/api/auth/check', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isLoggedIn) {
+                        window.location.href = 'admin-panel.html';
+                    }
+                })
+                .catch(err => {
+                    // Token is invalid or expired, remove it
+                    localStorage.removeItem('adminToken');
+                });
+            }
+            
+            // Toggle password visibility
+            const togglePassword = document.getElementById('toggle-password');
+            const password = document.getElementById('password');
+            
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // Change icon
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // Login form submission
+            const loginForm = document.getElementById('login-form');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('remember-me').checked;
+                
+                // Show loading state
+                const loginButton = document.getElementById('login-button');
+                const originalText = loginButton.innerHTML;
+                loginButton.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 登录中...';
+                loginButton.disabled = true;
+                
+                // Send login request to server
+                fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.token) {
+                        // Store token
+                        localStorage.setItem('adminToken', data.token);
+                        
+                        // Store user info
+                        if (rememberMe) {
+                            localStorage.setItem('adminUser', JSON.stringify(data.user));
+                        }
+                        
+                        // Redirect to admin panel
+                        window.location.href = 'admin-panel.html';
+                    } else {
+                        // Show error
+                        errorText.textContent = data.message || '登录失败，请重试。';
+                        errorMessage.classList.remove('hidden');
+                        
+                        // Reset form
+                        password.value = '';
+                        document.getElementById('username').focus();
+                    }
+                })
+                .catch(err => {
+                    errorText.textContent = '服务器错误，请稍后重试。';
+                    errorMessage.classList.remove('hidden');
+                })
+                .finally(() => {
+                    // Restore button state
+                    loginButton.innerHTML = originalText;
+                    loginButton.disabled = false;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

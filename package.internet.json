@@ -1,0 +1,14 @@
+{
+  "name": "photo-gallery-internet",
+  "version": "1.0.0",
+  "description": "Internet access for Photo Gallery",
+  "scripts": {
+    "tunnel-frontend": "lt --port 8080",
+    "tunnel-backend": "lt --port 3000",
+    "start-all": "concurrently \"npm run tunnel-frontend\" \"npm run tunnel-backend\""
+  },
+  "devDependencies": {
+    "localtunnel": "^2.0.2",
+    "concurrently": "^8.2.2"
+  }
+}

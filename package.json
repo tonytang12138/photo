@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  },
+  "dependencies": {
+    "ngrok": "^5.0.0-beta.2"
+  }
+}

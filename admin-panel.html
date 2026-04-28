@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板 - 摄影作品集</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        dark: '#0F172A',
+                        light: '#F8FAFC',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#3B82F6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .bg-gradient-radial {
+                background-image: radial-gradient(circle, var(--tw-gradient-stops));
+            }
+        }
+        
+        /* Custom styles */
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-link:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3B82F6;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .image-preview {
+            transition: all 0.3s ease;
+        }
+        
+        .image-preview:hover .image-actions {
+            opacity: 1;
+        }
+        
+        .image-actions {
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area.dragover {
+            border-color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .toast {
+            transition: all 0.3s ease;
+            transform: translateX(400px);
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-light min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 bg-dark border-r border-gray-800 hidden md:block">
+            <div class="p-4 border-b border-gray-800">
+                <h1 class="text-xl font-bold text-primary">管理面板</h1>
+                <p class="text-sm text-gray-400">摄影作品集</p>
+            </div>
+            
+            <nav class="mt-4">
+                <a href="#dashboard" class="sidebar-link active flex items-center px-4 py-3 text-gray-300 hover:text-primary">
+                    <i class="fa fa-dashboard w-6"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="#images" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary">
+                    <i class="fa fa-picture-o w-6"></i>
+                    <span>管理图片</span>
+                </a>
+                <a href="#upload" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary">
+                    <i class="fa fa-upload w-6"></i>
+                    <span>上传新图片</span>
+                </a>
+                <a href="#settings" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary">
+                    <i class="fa fa-cog w-6"></i>
+                    <span>设置</span>
+                </a>
+            </nav>
+            
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-800">
+                <button id="logout-button" class="flex items-center text-gray-400 hover:text-primary transition-colors duration-300 w-full">
+                    <i class="fa fa-sign-out w-6"></i>
+                    <span>退出登录</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Mobile Sidebar Toggle -->
+        <div class="md:hidden fixed bottom-4 right-4 z-50">
+            <button id="mobile-menu-button" class="bg-primary hover:bg-blue-600 text-white p-3 rounded-full shadow-lg">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Sidebar -->
+        <div id="mobile-sidebar" class="fixed inset-0 z-40 bg-dark transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold text-primary">Admin Panel</h1>
+                    <p class="text-sm text-gray-400">Simon Mo Photography</p>
+                </div>
+                <button id="close-mobile-menu" class="text-gray-400 hover:text-primary">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <nav class="mt-4">
+                <a href="#dashboard" class="sidebar-link active flex items-center px-4 py-3 text-gray-300 hover:text-primary mobile-nav-link">
+                    <i class="fa fa-dashboard w-6"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="#images" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary mobile-nav-link">
+                    <i class="fa fa-picture-o w-6"></i>
+                    <span>管理图片</span>
+                </a>
+                <a href="#upload" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary mobile-nav-link">
+                    <i class="fa fa-upload w-6"></i>
+                    <span>上传新图片</span>
+                </a>
+                <a href="#settings" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary mobile-nav-link">
+                    <i class="fa fa-cog w-6"></i>
+                    <span>设置</span>
+                </a>
+                <a href="#" id="mobile-logout" class="sidebar-link flex items-center px-4 py-3 text-gray-300 hover:text-primary mt-8">
+                    <i class="fa fa-sign-out w-6"></i>
+                    <span>退出登录</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-gray-900">
+            <!-- Header -->
+            <header class="bg-dark border-b border-gray-800 p-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold" id="page-title">Dashboard</h2>
+                    <div class="flex items-center">
+                        <span class="text-sm text-gray-400 mr-4">欢迎，管理员</span>
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="p-6">
+                <!-- Dashboard Section -->
+                <section id="dashboard-section" class="section active">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Stats Cards -->
+                        <div class="card bg-dark border border-gray-800 rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">图片总数</p>
+                                    <h3 class="text-2xl font-bold" id="total-images">0</h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-primary">
+                                    <i class="fa fa-picture-o text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-dark border border-gray-800 rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">风景</p>
+                                    <h3 class="text-2xl font-bold" id="landscape-count">0</h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
+                                    <i class="fa fa-tree text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-dark border border-gray-800 rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">城市</p>
+                                    <h3 class="text-2xl font-bold" id="cityscape-count">0</h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
+                                    <i class="fa fa-building text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-dark border border-gray-800 rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">自然</p>
+                                    <h3 class="text-2xl font-bold" id="nature-count">0</h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                    <i class="fa fa-leaf text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark border border-gray-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold mb-4">最近活动</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-800">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">操作</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">图片</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-log">
+                                    <!-- Activity log entries will be added here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Manage Images Section -->
+                <section id="images-section" class="section hidden">
+                    <div class="bg-dark border border-gray-800 rounded-lg p-6 mb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                            <h3 class="text-lg font-bold mb-4 md:mb-0">Manage Images</h3>
+                            <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+                                <div class="relative flex-grow md:flex-grow-0">
+                                    <input type="text" id="image-search" class="w-full md:w-64 pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" placeholder="搜索图片...">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                        <i class="fa fa-search"></i>
+                                    </span>
+                                </div>
+                                <select id="category-filter" class="w-full md:w-40 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light">
+                                    <option value="all">所有分类</option>
+                                    <option value="landscape">风景</option>
+                                    <option value="cityscape">城市</option>
+                                    <option value="nature">自然</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="images-grid">
+                            <!-- Images will be loaded here -->
+                        </div>
+                        
+                        <div class="mt-8 text-center" id="no-images-message">
+                            <p class="text-gray-400">没有找到图片。请上传一些图片开始。</p>
+                            <a href="#upload" class="inline-block mt-4 bg-primary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">
+                                上传图片
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Upload Section -->
+                <section id="upload-section" class="section hidden">
+                    <div class="bg-dark border border-gray-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold mb-6">上传新图片</h3>
+                        
+                        <div class="mb-8">
+                            <div id="upload-area" class="upload-area border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors duration-300">
+                                <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center text-primary mb-4">
+                                        <i class="fa fa-cloud-upload text-2xl"></i>
+                                    </div>
+                                    <h4 class="text-lg font-medium mb-2">Drag & Drop Files</h4>
+                                    <p class="text-gray-400 mb-4">or click to browse from your computer</p>
+                                    <button id="browse-button" class="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">
+                                        Browse Files
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h4 class="text-md font-medium mb-4">上传设置</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="image-category" class="block mb-2 text-sm font-medium text-gray-400">分类</label>
+                                    <select id="image-category" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light">
+                                        <option value="landscape">风景</option>
+                                        <option value="cityscape">城市</option>
+                                        <option value="nature">自然</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="image-status" class="block mb-2 text-sm font-medium text-gray-400">状态</label>
+                                    <select id="image-status" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light">
+                                        <option value="published">已发布</option>
+                                        <option value="draft">草稿</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="preview-container" class="hidden mb-6">
+                            <h4 class="text-md font-medium mb-4">图片预览</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="preview-grid">
+                                <!-- Image previews will be added here -->
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button id="cancel-upload" class="btn mr-4 px-6 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors duration-300 hidden">
+                                Cancel
+                            </button>
+                            <button id="start-upload" class="btn px-6 py-2 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg transition-colors duration-300 hidden">
+                                Upload Images
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Settings Section -->
+                <section id="settings-section" class="section hidden">
+                    <div class="bg-dark border border-gray-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold mb-6">设置</h3>
+                        
+                        <div class="mb-8">
+                            <h4 class="text-md font-medium mb-4">基本设置</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="site-title" class="block mb-2 text-sm font-medium text-gray-400">网站标题</label>
+                                    <input type="text" id="site-title" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" value="摄影作品集">
+                                </div>
+                                <div>
+                                    <label for="site-description" class="block mb-2 text-sm font-medium text-gray-400">网站描述</label>
+                                    <input type="text" id="site-description" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" value="专业摄影作品集">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-8">
+                            <h4 class="text-md font-medium mb-4">管理员设置</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="admin-username" class="block mb-2 text-sm font-medium text-gray-400">用户名</label>
+                                    <input type="text" id="admin-username" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" value="admin">
+                                </div>
+                                <div>
+                                    <label for="admin-email" class="block mb-2 text-sm font-medium text-gray-400">邮箱</label>
+                                    <input type="email" id="admin-email" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" value="admin@example.com">
+                                </div>
+                                <div>
+                                    <label for="admin-password" class="block mb-2 text-sm font-medium text-gray-400">新密码</label>
+                                    <input type="password" id="admin-password" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" placeholder="留空以保持当前密码">
+                                </div>
+                                <div>
+                                    <label for="admin-confirm-password" class="block mb-2 text-sm font-medium text-gray-400">确认密码</label>
+                                    <input type="password" id="admin-confirm-password" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-light" placeholder="确认新密码">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button id="save-settings" class="btn px-6 py-2 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg transition-colors duration-300">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2">
+        <!-- Toasts will be added here -->
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-dark border border-gray-800 rounded-lg p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+            <h3 class="text-lg font-bold mb-4">确认删除</h3>
+            <p class="text-gray-300 mb-6">您确定要删除此图片吗？此操作无法撤销。</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-delete" class="btn px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors duration-300">
+                    取消
+                </button>
+                <button id="confirm-delete" class="btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors duration-300">
+                    删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查管理员是否已登录
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'admin-login.html';
+            }
+            
+            // 画廊图片样本数据
+            let galleryImages = [
+                {
+                    id: 1,
+                    title: 'Mountain Sunrise',
+                    description: 'Norwegian Fjords',
+                    category: 'landscape',
+                    imageUrl: 'https://p3-doubao-search-sign.byteimg.com/labis/50d511aa279689c3028358848162cba9~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=WCWWf%2B8qbRKro%2FyoC8frT7emy7o%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-15T10:30:00')
+                },
+                {
+                    id: 2,
+                    title: 'Alpine Chapel',
+                    description: 'Dolomites, Italy',
+                    category: 'landscape',
+                    imageUrl: 'https://p3-doubao-search-sign.byteimg.com/labis/9c1e919a67e24c3b33574db82feb0136~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=jSyUh1NDd%2BGEqA6vYSSWH1%2BaODg%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-14T14:45:00')
+                },
+                {
+                    id: 3,
+                    title: 'Himalayan Reflection',
+                    description: 'Pokhara, Nepal',
+                    category: 'landscape',
+                    imageUrl: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/16545438a269435f918fae12449adbfa~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=LENGZ33KWjjhKzdafWf5jDG8g00%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-13T09:15:00')
+                },
+                {
+                    id: 4,
+                    title: 'Urban Reflections',
+                    description: 'Shanghai, China',
+                    category: 'cityscape',
+                    imageUrl: 'https://p26-doubao-search-sign.byteimg.com/labis/3b6a453da6a36a72cc4b34f4657c4901~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=tFmFJtmiTWRwY%2FwV%2FzGfaNtEP8U%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-12T16:20:00')
+                },
+                {
+                    id: 5,
+                    title: 'London at Dusk',
+                    description: 'Financial District',
+                    category: 'cityscape',
+                    imageUrl: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/e8936b2e244e4f93a214de951e51e7f2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=dqX5JA8OVccG1zqK6Jem3L7k2Sc%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-11T18:30:00')
+                },
+                {
+                    id: 6,
+                    title: 'Toronto Skyline',
+                    description: 'CN Tower at Night',
+                    category: 'cityscape',
+                    imageUrl: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/d7401c0f7ce6423cba0b1747045f7edf~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=fxCTufFLSQUzDQmG8p5GuWmXRz0%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-10T20:10:00')
+                },
+                {
+                    id: 7,
+                    title: 'Mountain Mirror',
+                    description: 'Alpine Lake',
+                    category: 'nature',
+                    imageUrl: 'https://p11-doubao-search-sign.byteimg.com/labis/1e277dd5db9ebb9ec04f29564897f4f9~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=M3HvcLuRRY3G%2BxyY1wuYMlar%2BAg%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-09T11:45:00')
+                },
+                {
+                    id: 8,
+                    title: 'River Valley',
+                    description: 'Canadian Rockies',
+                    category: 'nature',
+                    imageUrl: 'https://p11-doubao-search-sign.byteimg.com/labis/edf51a166f869d26fef0e2267eea9c8a~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=myylgK%2FiHLDPbYmW6BApeniHL1Y%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-08T13:20:00')
+                },
+                {
+                    id: 9,
+                    title: 'Mandarin Duck',
+                    description: 'Colorful Waterfowl',
+                    category: 'nature',
+                    imageUrl: 'https://p11-doubao-search-sign.byteimg.com/labis/6b3e0420cf9caf29023f39cbafc4a4e3~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1792899148&x-signature=5%2F5WChHq3Louk3HvNyhbjJVHpkk%3D',
+                    status: 'published',
+                    uploadedAt: new Date('2026-04-07T09:50:00')
+                }
+            ];
+            
+            // 活动日志样本
+            let activityLog = [
+                {
+                    action: 'Uploaded',
+                    image: 'Mountain Sunrise',
+                    timestamp: new Date('2026-04-15T10:30:00')
+                },
+                {
+                    action: 'Uploaded',
+                    image: 'Alpine Chapel',
+                    timestamp: new Date('2026-04-14T14:45:00')
+                },
+                {
+                    action: 'Deleted',
+                    image: 'Forest Path',
+                    timestamp: new Date('2026-04-14T12:15:00')
+                },
+                {
+                    action: 'Uploaded',
+                    image: 'Himalayan Reflection',
+                    timestamp: new Date('2026-04-13T09:15:00')
+                },
+                {
+                    action: 'Updated',
+                    image: 'Urban Reflections',
+                    timestamp: new Date('2026-04-12T16:20:00')
+                }
+            ];
+            
+            // DOM Elements
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            const sections = document.querySelectorAll('.section');
+            const pageTitle = document.getElementById('page-title');
+            const logoutButton = document.getElementById('logout-button');
+            const mobileLogout = document.getElementById('mobile-logout');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            const totalImagesElement = document.getElementById('total-images');
+            const landscapeCountElement = document.getElementById('landscape-count');
+            const cityscapeCountElement = document.getElementById('cityscape-count');
+            const natureCountElement = document.getElementById('nature-count');
+            const activityLogElement = document.getElementById('activity-log');
+            const imagesGrid = document.getElementById('images-grid');
+            const noImagesMessage = document.getElementById('no-images-message');
+            const imageSearch = document.getElementById('image-search');
+            const categoryFilter = document.getElementById('category-filter');
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const browseButton = document.getElementById('browse-button');
+            const previewContainer = document.getElementById('preview-container');
+            const previewGrid = document.getElementById('preview-grid');
+            const cancelUpload = document.getElementById('cancel-upload');
+            const startUpload = document.getElementById('start-upload');
+            const deleteModal = document.getElementById('delete-modal');
+            const cancelDelete = document.getElementById('cancel-delete');
+            const confirmDelete = document.getElementById('confirm-delete');
+            const saveSettings = document.getElementById('save-settings');
+            const toastContainer = document.getElementById('toast-container');
+            
+            // Variables
+            let selectedImages = [];
+            let imageToDelete = null;
+            
+            // 初始化管理面板
+            initializeAdminPanel();
+            
+            // Functions
+            function initializeAdminPanel() {
+                // 更新统计数据
+                updateStats();
+                
+                // 加载活动日志
+                loadActivityLog();
+                
+                // 加载图片
+                loadImages();
+                
+                // 设置事件监听器
+                setupEventListeners();
+            }
+            
+            function updateStats() {
+                totalImagesElement.textContent = galleryImages.length;
+                landscapeCountElement.textContent = galleryImages.filter(img => img.category === 'landscape').length;
+                cityscapeCountElement.textContent = galleryImages.filter(img => img.category === 'cityscape').length;
+                natureCountElement.textContent = galleryImages.filter(img => img.category === 'nature').length;
+            }
+            
+            function loadActivityLog() {
+                activityLogElement.innerHTML = '';
+                
+                activityLog.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-800 hover:bg-gray-800/50';
+                    
+                    let actionClass = '';
+                    switch(log.action.toLowerCase()) {
+                        case 'uploaded':
+                            actionClass = 'text-green-500';
+                            break;
+                        case 'deleted':
+                            actionClass = 'text-red-500';
+                            break;
+                        case 'updated':
+                            actionClass = 'text-blue-500';
+                            break;
+                        default:
+                            actionClass = 'text-gray-400';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-3">
+                            <span class="${actionClass} font-medium">${log.action}</span>
+                        </td>
+                        <td class="px-4 py-3">${log.image}</td>
+                        <td class="px-4 py-3 text-gray-400">${formatDate(log.timestamp)}</td>
+                    `;
+                    
+                    activityLogElement.appendChild(row);
+                });
+            }
+            
+            function loadImages(filter = 'all', searchTerm = '') {
+                let filteredImages = galleryImages;
+                
+                // 应用分类筛选
+                if (filter !== 'all') {
+                    filteredImages = filteredImages.filter(img => img.category === filter);
+                }
+                
+                // 应用搜索筛选
+                if (searchTerm) {
+                    filteredImages = filteredImages.filter(img => 
+                        img.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        img.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+                
+                imagesGrid.innerHTML = '';
+                
+                if (filteredImages.length === 0) {
+                    noImagesMessage.classList.remove('hidden');
+                } else {
+                    noImagesMessage.classList.add('hidden');
+                    
+                    filteredImages.forEach(img => {
+                        const imagePreview = document.createElement('div');
+                        imagePreview.className = 'image-preview relative rounded-lg overflow-hidden group';
+                        
+                        imagePreview.innerHTML = `
+                            <img src="${img.imageUrl}" alt="${img.title}" class="w-full h-48 object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                                <h4 class="font-medium">${img.title}</h4>
+                                <p class="text-sm text-gray-300">${img.description}</p>
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-xs px-2 py-1 rounded-full ${getCategoryClass(img.category)}">${capitalizeFirstLetter(img.category)}</span>
+                                    <div class="flex space-x-1">
+                                        <button class="edit-image p-1 text-gray-300 hover:text-primary" data-id="${img.id}">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        <button class="delete-image p-1 text-gray-300 hover:text-red-500" data-id="${img.id}">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        imagesGrid.appendChild(imagePreview);
+                    });
+                    
+                    // 为删除按钮添加事件监听器
+                    document.querySelectorAll('.delete-image').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const imageId = parseInt(this.getAttribute('data-id'));
+                            showDeleteModal(imageId);
+                        });
+                    });
+                    
+                    // 为编辑按钮添加事件监听器
+                    document.querySelectorAll('.edit-image').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const imageId = parseInt(this.getAttribute('data-id'));
+                            editImage(imageId);
+                        });
+                    });
+                }
+            }
+            
+            function showDeleteModal(imageId) {
+                imageToDelete = imageId;
+                deleteModal.classList.remove('opacity-0', 'pointer-events-none');
+                deleteModal.querySelector('.modal-content').classList.remove('scale-95');
+                deleteModal.querySelector('.modal-content').classList.add('scale-100');
+            }
+            
+            function hideDeleteModal() {
+                deleteModal.classList.add('opacity-0', 'pointer-events-none');
+                deleteModal.querySelector('.modal-content').classList.remove('scale-100');
+                deleteModal.querySelector('.modal-content').classList.add('scale-95');
+                imageToDelete = null;
+            }
+            
+            function deleteImage() {
+                if (imageToDelete !== null) {
+                    const imageIndex = galleryImages.findIndex(img => img.id === imageToDelete);
+                    if (imageIndex !== -1) {
+                        const deletedImage = galleryImages[imageIndex];
+                        
+                        // 从画廊中移除图片
+                        galleryImages.splice(imageIndex, 1);
+                        
+                        // 添加到活动日志
+                        activityLog.unshift({
+                            action: 'Deleted',
+                            image: deletedImage.title,
+                            timestamp: new Date()
+                        });
+                        
+                        // 更新UI
+                        updateStats();
+                        loadActivityLog();
+                        loadImages(categoryFilter.value, imageSearch.value);
+                        
+                        // 显示提示通知
+                        showToast('图片删除成功', 'success');
+                    }
+                }
+                
+                hideDeleteModal();
+            }
+            
+            function editImage(imageId) {
+                const image = galleryImages.find(img => img.id === imageId);
+                if (image) {
+                    // 在实际应用中，您会显示一个编辑表单
+                    showToast('此演示版中未实现编辑功能', 'info');
+                }
+            }
+            
+            function setupEventListeners() {
+                // 侧边栏导航
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const target = this.getAttribute('href').substring(1);
+                        
+                        // 更新活动链接
+                        sidebarLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // 显示对应的部分
+                        sections.forEach(section => {
+                            if (section.id === `${target}-section`) {
+                                section.classList.remove('hidden');
+                                section.classList.add('active');
+                                pageTitle.textContent = this.querySelector('span').textContent;
+                            } else {
+                                section.classList.add('hidden');
+                                section.classList.remove('active');
+                            }
+                        });
+                        
+                        // 关闭移动侧边栏
+                        mobileSidebar.classList.add('-translate-x-full');
+                    });
+                });
+                
+                // 移动菜单切换
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileSidebar.classList.remove('-translate-x-full');
+                });
+                
+                closeMobileMenu.addEventListener('click', function() {
+                    mobileSidebar.classList.add('-translate-x-full');
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileSidebar.classList.add('-translate-x-full');
+                    });
+                });
+                
+                // 退出登录按钮
+                logoutButton.addEventListener('click', function() {
+                    localStorage.removeItem('adminLoggedIn');
+                    window.location.href = 'admin-login.html';
+                });
+                
+                mobileLogout.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('adminLoggedIn');
+                    window.location.href = 'admin-login.html';
+                });
+                
+                // 图片搜索和筛选
+                imageSearch.addEventListener('input', function() {
+                    loadImages(categoryFilter.value, this.value);
+                });
+                
+                categoryFilter.addEventListener('change', function() {
+                    loadImages(this.value, imageSearch.value);
+                });
+                
+                // 删除模态框
+                cancelDelete.addEventListener('click', hideDeleteModal);
+                confirmDelete.addEventListener('click', deleteImage);
+                
+                // 上传功能
+                browseButton.addEventListener('click', function() {
+                    fileInput.click();
+                });
+                
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', function() {
+                    this.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    if (e.dataTransfer.files.length > 0) {
+                        handleFiles(e.dataTransfer.files);
+                    }
+                });
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        handleFiles(this.files);
+                    }
+                });
+                
+                cancelUpload.addEventListener('click', function() {
+                    resetUpload();
+                });
+                
+                startUpload.addEventListener('click', function() {
+                    uploadImages();
+                });
+                
+                // 设置
+                saveSettings.addEventListener('click', function() {
+                    const siteTitle = document.getElementById('site-title').value;
+                    const siteDescription = document.getElementById('site-description').value;
+                    const adminUsername = document.getElementById('admin-username').value;
+                    const adminEmail = document.getElementById('admin-email').value;
+                    const adminPassword = document.getElementById('admin-password').value;
+                    const adminConfirmPassword = document.getElementById('admin-confirm-password').value;
+                    
+                    // 验证表单
+                    if (!siteTitle || !siteDescription || !adminUsername || !adminEmail) {
+                        showToast('请填写所有必填字段', 'error');
+                        return;
+                    }
+                    
+                    if (adminPassword && adminPassword !== adminConfirmPassword) {
+                        showToast('密码不匹配', 'error');
+                        return;
+                    }
+                    
+                    // 在实际应用中，您会将这些设置保存到数据库
+                    showToast('设置保存成功', 'success');
+                });
+            }
+            
+            function handleFiles(files) {
+                selectedImages = Array.from(files);
+                
+                if (selectedImages.length > 0) {
+                    previewContainer.classList.remove('hidden');
+                    previewGrid.innerHTML = '';
+                    
+                    selectedImages.forEach((file, index) => {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'relative rounded-lg overflow-hidden';
+                            
+                            previewItem.innerHTML = `
+                                <img src="${e.target.result}" alt="预览" class="w-full h-32 object-cover">
+                                <div class="absolute top-2 right-2">
+                                    <button class="remove-preview p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600" data-index="${index}">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-2">
+                                    <p class="text-xs truncate">${file.name}</p>
+                                </div>
+                            `;
+                            
+                            previewGrid.appendChild(previewItem);
+                            
+                            // 为移除按钮添加事件监听器
+                            previewItem.querySelector('.remove-preview').addEventListener('click', function() {
+                                const index = parseInt(this.getAttribute('data-index'));
+                                selectedImages.splice(index, 1);
+                                
+                                if (selectedImages.length === 0) {
+                                    resetUpload();
+                                } else {
+                                    handleFiles(selectedImages);
+                                }
+                            });
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    cancelUpload.classList.remove('hidden');
+                    startUpload.classList.remove('hidden');
+                }
+            }
+            
+            function resetUpload() {
+                selectedImages = [];
+                previewContainer.classList.add('hidden');
+                previewGrid.innerHTML = '';
+                cancelUpload.classList.add('hidden');
+                startUpload.classList.add('hidden');
+                fileInput.value = '';
+            }
+            
+            function uploadImages() {
+                if (selectedImages.length === 0) {
+                    showToast('未选择图片', 'error');
+                    return;
+                }
+                
+                const category = document.getElementById('image-category').value;
+                const status = document.getElementById('image-status').value;
+                
+                // 模拟上传过程
+                startUpload.disabled = true;
+                startUpload.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 上传中...';
+                
+                setTimeout(() => {
+                    selectedImages.forEach(file => {
+                        // 创建新图片对象
+                        const newImage = {
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            title: file.name.replace(/\.[^/.]+$/, ""), // 移除文件扩展名
+                            description: '上传的图片',
+                            category: category,
+                            imageUrl: URL.createObjectURL(file), // 在实际应用中，这将是服务器上的URL
+                            status: status,
+                            uploadedAt: new Date()
+                        };
+                        
+                        // 添加到画廊
+                        galleryImages.unshift(newImage);
+                        
+                        // 添加到活动日志
+                        activityLog.unshift({
+                            action: 'Uploaded',
+                            image: newImage.title,
+                            timestamp: new Date()
+                        });
+                    });
+                    
+                    // 更新UI
+                    updateStats();
+                    loadActivityLog();
+                    loadImages();
+                    
+                    // 重置上传表单
+                    resetUpload();
+                    
+                    // 显示提示通知
+                    showToast(`${selectedImages.length} 张图片上传成功`, 'success');
+                    
+                    // 重新启用上传按钮
+                    startUpload.disabled = false;
+                    startUpload.innerHTML = '上传图片';
+                    
+                    // 切换到图片部分
+                    document.querySelector('a[href="#images"]').click();
+                }, 1500);
+            }
+            
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast flex items-center p-4 rounded-lg shadow-lg mb-2 ${getToastClass(type)}`;
+                
+                let icon = 'info-circle';
+                switch(type) {
+                    case 'success':
+                        icon = 'check-circle';
+                        break;
+                    case 'error':
+                        icon = 'exclamation-circle';
+                        break;
+                    case 'warning':
+                        icon = 'exclamation-triangle';
+                        break;
+                }
+                
+                toast.innerHTML = `
+                    <i class="fa fa-${icon} mr-3"></i>
+                    <span>${message}</span>
+                    <button class="ml-auto text-white/70 hover:text-white">
+                        <i class="fa fa-times"></i>
+                    </button>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // 显示提示
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 100);
+                
+                // 为关闭按钮添加事件监听器
+                toast.querySelector('button').addEventListener('click', function() {
+                    hideToast(toast);
+                });
+                
+                // 5秒后自动隐藏
+                setTimeout(() => {
+                    hideToast(toast);
+                }, 5000);
+            }
+            
+            function hideToast(toast) {
+                toast.classList.remove('show');
+                
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            }
+            
+            function getToastClass(type) {
+                switch(type) {
+                    case 'success':
+                        return 'bg-green-500 text-white';
+                    case 'error':
+                        return 'bg-red-500 text-white';
+                    case 'warning':
+                        return 'bg-yellow-500 text-white';
+                    default:
+                        return 'bg-blue-500 text-white';
+                }
+            }
+            
+            function getCategoryClass(category) {
+                switch(category) {
+                    case 'landscape':
+                        return 'bg-green-500/20 text-green-500';
+                    case 'cityscape':
+                        return 'bg-yellow-500/20 text-yellow-500';
+                    case 'nature':
+                        return 'bg-emerald-500/20 text-emerald-500';
+                    default:
+                        return 'bg-gray-500/20 text-gray-500';
+                }
+            }
+            
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+            
+            function formatDate(date) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                return date.toLocaleDateString('zh-CN', options);
+            }
+        });
+    </script>
+</body>
+</html>
