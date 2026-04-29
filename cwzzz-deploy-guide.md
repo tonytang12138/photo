@@ -32,7 +32,7 @@ Type: CNAME Name: www Value: cname.vercel-dns.com
 
 1. Go to https://vercel.com/dashboard
 2. Select your project
-3. Click Settings → Domains
+3. Click Settings ?? Domains
 4. Click Add
 5. Enter `cwzzz.online`
 6. Click Add
@@ -119,8 +119,8 @@ window.API_BASE_URL = 'https://your-backend.up.railway.app';
 ### Need Help?
 
 See detailed documentation:
-- `域名部署指南-cwzzz.online.md` (Chinese)
-- `CWZZZ-部署指南.md` (Quick guide)
+- `???????????-cwzzz.online.md` (Chinese)
+- `CWZZZ-???????.md` (Quick guide)
 
 ---
 
